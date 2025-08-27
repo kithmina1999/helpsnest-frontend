@@ -109,13 +109,7 @@ const RegisterForm = () => {
               <span className="ml-2">Remember password</span>
             </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-muted-foreground text-[16px]">
-              Already have an account?{" "}
-              <Link href="./sign-in" className="text-primary font-semibold">
-                Sign In
-              </Link>
-            </span>
+          <div className="flex flex-col gap-4">
             <Button
               type="submit"
               className="w-full mt-5"
@@ -123,6 +117,15 @@ const RegisterForm = () => {
             >
               Register
             </Button>
+            <span className="text-muted-foreground text-[16px]">
+              Already have an account?{" "}
+              <Link
+                href="./sign-in"
+                className="text-primary font-semibold ml-2 hover:underline transition ease-in-out duration-300"
+              >
+                Sign In
+              </Link>
+            </span>
           </div>
         </form>
       </Form>

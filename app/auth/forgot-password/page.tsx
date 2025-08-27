@@ -1,0 +1,27 @@
+import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
+import ThemeToggle from "@/components/common/ThemeToggle";
+import ClientOnly from "@/components/providers/ClientOnly";
+import Image from "next/image";
+import React from "react";
+
+const page = () => {
+  return (
+    <div className="flex justify-center items-center h-[100vh] relative">
+      <ClientOnly>
+        <ForgotPasswordForm />
+      </ClientOnly>
+
+      <div className="absolute top-5 left-10 z-[100] flex gap-2 items-center">
+        <Image
+          src="/assets/logo.png"
+          width={50}
+          height={50}
+          alt="logo"
+        />
+        <ThemeToggle />
+    </div>
+    </div>
+  );
+};
+
+export default page;

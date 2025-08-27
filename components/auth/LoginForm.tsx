@@ -81,12 +81,6 @@ const LoginForm = () => {
             </div>
           </div>
           <div className="flex flex-col gap-4">
-          <span className="text-muted-foreground text-[16px]">
-              Don&apos;t have an account?{" "}
-              <Link href="./sign-up" className="text-primary font-semibold">
-                Sign Up
-              </Link>
-            </span>
             <Button
               type="submit"
               className="btn btn-primary w-full"
@@ -94,6 +88,15 @@ const LoginForm = () => {
             >
               Login
             </Button>
+            <span className="text-muted-foreground text-[16px]">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="./sign-up"
+                className="text-primary font-semibold ml-2 hover:underline transition ease-in-out duration-300"
+              >
+                Sign Up
+              </Link>
+            </span>
           </div>
         </form>
       </Form>
