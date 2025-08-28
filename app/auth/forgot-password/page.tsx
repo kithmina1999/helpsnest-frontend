@@ -1,4 +1,5 @@
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
+import Logo from "@/components/common/Logo";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import ClientOnly from "@/components/providers/ClientOnly";
 import Image from "next/image";
@@ -12,12 +13,7 @@ const page = () => {
       </ClientOnly>
 
       <div className="absolute top-5 left-10 z-[100] flex gap-2 items-center">
-        <Image
-          src="/assets/logo.png"
-          width={50}
-          height={50}
-          alt="logo"
-        />
+       <Logo />
         <ThemeToggle />
     </div>
     </div>

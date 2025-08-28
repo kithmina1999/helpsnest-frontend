@@ -1,5 +1,6 @@
 "use client"
 import LoginForm from '@/components/auth/LoginForm'
+import Logo from '@/components/common/Logo'
 import ThemeToggle from '@/components/common/ThemeToggle'
 import Image from 'next/image'
 import React from 'react'
@@ -9,12 +10,7 @@ const page = () => {
     <div className="grid lg:grid-cols-2 gap-4 h-[100vh] relative">
     {/* logo */}
     <div className="absolute top-5 left-10 z-[100] flex gap-2 items-center">
-        <Image
-          src="/assets/logo.png"
-          width={50}
-          height={50}
-          alt="logo"
-        />
+        <Logo />
         <ThemeToggle />
     </div>
     {/* form */}
