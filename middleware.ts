@@ -3,11 +3,8 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   //get refresh token from cookie
-  const refreshToken = request.cookies.get("refreshToken")?.value;
+  const refreshToken = request.cookies.get("refresh_token")?.value;
   //if refresh token is not present, redirect to login page
-  if (!refreshToken) {
-    return NextResponse.redirect(new URL("/auth/sign-in", request.url));
-  }
   //get the path user trying to access
   const { pathname } = request.nextUrl;
 
@@ -17,11 +14,12 @@ export function middleware(request: NextRequest) {
     "/auth/sign-up",
     "/auth/forgot-password",
     "/auth/reset-password",
-    "/auth/verify-email",
+    
   ];
 
   //anyother public pages
   const publicRoutes = [
+    "/auth/verify-email",
     "/",
     "/about",
     "/contact",
@@ -36,13 +34,13 @@ export function middleware(request: NextRequest) {
 
   // A protected route is any route that is not public and not for authentication
   const isProtectedRoute = !isPublicRoute && !isAuthRoute;
+  //If user trying to access protected page but has no token redirect to login page
+  if (isProtectedRoute && !refreshToken) {
+    return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+  }
 
   //redirect to "/dashboard" if user is already authenticated and try to access auth routes
   if (isAuthRoute && refreshToken) {
-    // Exception: allow access to verify-email page even if logged in
-    if (pathname === "/auth/verify-email") {
-      return NextResponse.next();
-    }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
