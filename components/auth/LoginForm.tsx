@@ -1,5 +1,8 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../providers/AuthProvider";
+import api from "@/lib/api";
 import AuthFormContainer from "./AuthFormContainer";
 import {
   Form,
@@ -16,6 +19,8 @@ import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import Link from "next/link";
 import { Button } from "../ui/button";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Terminal } from "lucide-react";
 
 const formSchema = z.object({
   email: z.email(),
@@ -25,6 +30,9 @@ const formSchema = z.object({
 });
 
 const LoginForm = () => {
+  const { login } = useAuth();
+  const router = useRouter();
+  const [error, setError] = useState<String | null>(null);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,13 +41,34 @@ const LoginForm = () => {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log(data);
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setError(null); //clear prevoius error
+    try {
+      const response = await api.post("/auth/login", data);
+      const { access_token } = response.data;
+      if (access_token) {
+        await login(access_token); //set user state in context
+        router.push("/"); //redirect to front page
+      }
+    } catch (error: any) {
+      if (error.response && error.response.data && error.response.data.error) {
+        setError(error.response.data.error);
+      } else {
+        setError("An unexpected error occurred. Please try again later.");
+      }
+    }
   };
   return (
     <AuthFormContainer title="Login" subtitle="Login to your account">
       <Form {...form}>
         <form className="space-y-7" onSubmit={form.handleSubmit(onSubmit)}>
+          {error && (
+            <Alert variant="destructive">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Heads up!!</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <FormField
             name="email"
             control={form.control}

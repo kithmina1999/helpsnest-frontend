@@ -1,5 +1,8 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../providers/AuthProvider";
+import api from "@/lib/api";
 import AuthFormContainer from "./AuthFormContainer";
 import {
   Form,
@@ -17,6 +20,8 @@ import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Terminal } from "lucide-react";
 
 const formSchema = z.object({
   email: z.email(),
@@ -25,6 +30,8 @@ const formSchema = z.object({
 });
 
 const RegisterForm = () => {
+  const [error, setError] = useState<String | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,14 +41,43 @@ const RegisterForm = () => {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log(data);
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setError(null); //clear prevoius error
+    setSuccess(null);
+    try {
+      const response =await api.post("/auth/register", 
+        {
+          email: data.email,
+          password: data.password
+        }
+      );
+      setSuccess(response.data.message);
+    } catch (error:any) {
+      if(error.response && error.response.data && error.response.data.error){
+        setError(error.response.data.error);
+      }else{
+        setError("An unexpected error occurred. Please try again.");}
+    }
   };
 
   return (
     <AuthFormContainer title="Register" subtitle="Create new account">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-7">
+        {error && (
+            <Alert variant="destructive">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Heads up!!</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          {success && (
+            <Alert variant="destructive">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Heads up!!</AlertTitle>
+              <AlertDescription>{success}</AlertDescription>
+            </Alert>
+          )}
           <FormField
             name="email"
             control={form.control}
