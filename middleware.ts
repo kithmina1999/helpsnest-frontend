@@ -14,13 +14,11 @@ export function middleware(request: NextRequest) {
     "/auth/sign-up",
     "/auth/forgot-password",
     "/auth/reset-password",
-    
   ];
 
   //anyother public pages
   const publicRoutes = [
     "/auth/verify-email",
-    "/",
     "/about",
     "/contact",
     "/about/privacy-policy",
@@ -30,18 +28,23 @@ export function middleware(request: NextRequest) {
 
   //Chekc if the current route is protected route
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-  const isPublicRoute = publicRoutes.some((route) => pathname.includes(route));
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
 
-  // A protected route is any route that is not public and not for authentication
-  const isProtectedRoute = !isPublicRoute && !isAuthRoute;
-  //If user trying to access protected page but has no token redirect to login page
-  if (isProtectedRoute && !refreshToken) {
-    return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+  //if the user logged in (have a token)
+  if (refreshToken) {
+    // And they are trying to access a login/register page, redirect to dashboard
+    if (isAuthRoute) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
   }
-
-  //redirect to "/dashboard" if user is already authenticated and try to access auth routes
-  if (isAuthRoute && refreshToken) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  //if the user is not logged in (have no token)
+  else {
+    // And they are trying to access a page that is NOT public and NOT for auth,redirect to login page
+    if (!isPublicRoute && !isAuthRoute) {
+      return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+    }
   }
 
   //if refresh token is present, return response

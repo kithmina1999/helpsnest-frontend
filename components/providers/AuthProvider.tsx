@@ -8,16 +8,14 @@ import React, {
   ReactNode,
 } from "react";
 import api from "@/lib/api";
-import { storeAccessToken, getAccessToken } from "@/lib/auth";
+import { storeAccessToken } from "@/lib/auth";
 
-//define shape of use data
 interface User {
   id: string;
   email: string;
   status: string;
 }
 
-//define shape of context
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -26,91 +24,85 @@ interface AuthContextType {
   logout: () => void;
 }
 
-//Create the context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-//AuthRPovide component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    //effect run once on initial app loads
     const initializeAuth = async () => {
+      setIsLoading(true);
       try {
-        //check if a token is already in memmory
-        const token = getAccessToken();
-        if (token) {
-          //if token exists, fetch user data
-          await fetchUser();
-        } else {
-          await refreshToken();
-        }
+        // On load, just try to fetch the user.
+        // The API interceptor will handle refreshing the token if necessary.
+        const { data } = await api.get("/me");
+        setUser(data.user);
       } catch (error) {
-        console.error("Error initializing auth:", error);
+        // If /me fails (even after a refresh attempt by the interceptor),
+        // it means the user is not logged in.
+        console.log("Initialization: No active session found.");
+        setUser(null);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
+
     initializeAuth();
   }, []);
 
-  const fetchUser = async()=>{
+  const fetchUser = async () => {
     try {
-        const {data} = await api.get('/me')
-        setUser(data.user)
+      const { data } = await api.get<{ user: User }>("/me");
+      setUser(data.user);
+      return data.user; // Return the user
     } catch (error) {
-        console.error("Failed to fetch user",error)
-        setUser(null)
-        storeAccessToken(''); // Clear invalid token
+      console.error("Failed to fetch user", error);
+      setUser(null);
+      storeAccessToken("");
+      throw error; // Re-throw the error so the caller knows it failed
     }
   };
-
-  const refreshToken = async () => {
-    try {
-      const {data} = await api.get('/auth/refresh')
-      if(data.access_token){
-        storeAccessToken(data.access_token)
-        await fetchUser()
-      }
-    }catch(error){
-      console.log("No active session")
-      setUser(null)
-    }
-  }
 
   const login = async (token: string) => {
+    storeAccessToken(token);
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    // After login, fetch the user data
     try {
-      storeAccessToken(token);
       await fetchUser();
     } catch (error) {
-      console.error("Failed to login:", error);
+      console.error("Failed to fetch user after login", error);
+      setUser(null);
     }
   };
+
   const logout = () => {
-    //implement /auth/logout later
-    storeAccessToken('');
+    // We will implement the backend /auth/logout endpoint later
+    storeAccessToken("");
+    delete api.defaults.headers.common["Authorization"];
     setUser(null);
-  }
+  };
 
   const value = {
     user,
     isAuthenticated: !!user,
-    isLoading: loading,
+    isLoading,
     login,
     logout,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  // Render a loading state or null while checking auth status
+  // This prevents a flash of unauthenticated content
+  if (isLoading) {
+    return <div>Loading...</div>; // Or a spinner component
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context===undefined) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
