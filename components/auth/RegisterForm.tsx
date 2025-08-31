@@ -23,11 +23,19 @@ import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Terminal } from "lucide-react";
 
-const formSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8),
-  confirmPassword: z.string().min(8),
-});
+const formSchema = z
+  .object({
+    email: z.email(),
+    password: z.string().min(8, "Password must be at least 8 characters."),
+    confirmPassword: z.string().min(8),
+    terms: z.boolean().refine((val) => val === true, {
+      message: "You must accept the terms and conditions.",
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 const RegisterForm = () => {
   const [error, setError] = useState<String | null>(null);
@@ -38,6 +46,7 @@ const RegisterForm = () => {
       email: "",
       password: "",
       confirmPassword: "",
+      terms: false,
     },
   });
 
@@ -45,18 +54,17 @@ const RegisterForm = () => {
     setError(null); //clear prevoius error
     setSuccess(null);
     try {
-      const response =await api.post("/auth/register", 
-        {
-          email: data.email,
-          password: data.password
-        }
-      );
+      const response = await api.post("/auth/register", {
+        email: data.email,
+        password: data.password,
+      });
       setSuccess(response.data.message);
-    } catch (error:any) {
-      if(error.response && error.response.data && error.response.data.error){
+    } catch (error: any) {
+      if (error.response && error.response.data && error.response.data.error) {
         setError(error.response.data.error);
-      }else{
-        setError("An unexpected error occurred. Please try again.");}
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -64,7 +72,7 @@ const RegisterForm = () => {
     <AuthFormContainer title="Register" subtitle="Create new account">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-7">
-        {error && (
+          {error && (
             <Alert variant="destructive">
               <Terminal className="h-4 w-4" />
               <AlertTitle>Heads up!!</AlertTitle>
@@ -130,21 +138,42 @@ const RegisterForm = () => {
               </FormItem>
             )}
           />
-
-          <div className="text-muted-foreground text-sm flex flex-col gap-2">
-            <div className="flex gap-2">
-              <Checkbox />
-              <span className="ml-2">
-                By creating an account, you agree to our
-                <span className="text-primary"> Terms of Service</span> and{" "}
-                <span className="text-primary">Privacy Policy</span>.
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <Checkbox />
-              <span className="ml-2">Remember password</span>
-            </div>
-          </div>
+          <FormField
+            control={form.control}
+            name="terms"
+            render={({ field }) => (
+              <FormItem className="">
+                <div className="flex flex-row  items-center space-x-3 mb-2 text-muted-foreground">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>
+                    <p className="leading-snug">
+                      By creating an account, you agree to our{" "}
+                      <Link
+                        href="/terms"
+                        className="text-primary hover:underline"
+                      >
+                        Terms of Use
+                      </Link>{" "}
+                      and{" "}
+                      <Link
+                        href="/privacy"
+                        className="text-primary hover:underline"
+                      >
+                        Privacy Policy
+                      </Link>{" "}
+                      .
+                    </p>
+                  </FormLabel>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <div className="flex flex-col gap-4">
             <Button
               type="submit"

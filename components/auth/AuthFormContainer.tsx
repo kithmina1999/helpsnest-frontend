@@ -17,7 +17,7 @@ const AuthFormContainer = ({
 }: AuthFormContainerProps) => {
   return (
     <div className="flex justify-center items-center h-full">
-      <Card className="lg:w-[500px] w-[80vw] relative">
+      <Card className="lg:w-[550px] w-[80vw] relative">
         <CardHeader>
           <div className="text-center mb-5 space-y-2">
             <p className="text-3xl font-bold ">{title}</p>
